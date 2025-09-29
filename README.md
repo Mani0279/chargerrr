@@ -10,17 +10,16 @@ Detailed Information: View station details including amenities, address, and ava
 Clean Architecture: MVC pattern with GetX state management
 
 Screenshots
-
+<div align="center">
 Login Screen with Google Sign-In
-![img.png](img.png)
-Home Screen with station list
-![img_1.png](img_1.png)
+<img src="img.png" width="300" alt="Login Screen"/>
+Home Screen with Station List
+<img src="img_1.png" width="300" alt="Home Screen"/>
 Station Detail Screen with Google Maps
-![img_2.png](img_2.png) 
-![img_3.png](img_3.png)
-Real-time availability tracking
---used realtime database which can ne updated instaltly on thtnadmin panle
-
+<img src="img_2.png" width="300" alt="Station Detail 1"/>
+<img src="img_3.png" width="300" alt="Station Detail 2"/>
+Real-time availability tracking using Firebase Realtime Database - updates instantly from admin panel
+</div>
 Tech Stack
 
 Framework: Flutter
@@ -33,3 +32,5 @@ Firebase Realtime Database
 
 Maps: Google Maps Flutter
 Architecture: MVC Pattern
+
+apk-https://drive.google.com/file/d/1SfFb4w7kkvIy9SnglFPG-uIqoxxGgezc/view?usp=sharing
