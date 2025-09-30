@@ -1,10 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../controller/auth_controller.dart';
 import '../../controller/station_controller.dart';
+import '../mapview/map_view_screen.dart';
 import '../station_detail_screen/station_detail_screen.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -24,7 +25,16 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
-          // User Profile PopupMenuButton with explicit generic type <dynamic>
+          // Map View Button
+          IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: () {
+              Get.to(() => const MapViewScreen());
+            },
+            tooltip: 'Map View',
+          ),
+
+          // User Profile PopupMenuButton
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: Obx(() {
@@ -128,7 +138,6 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        // Loading, Error, Empty State and Station List UI remain unchanged
         if (stationController.isLoading.value) {
           return Center(
             child: Column(
@@ -254,16 +263,16 @@ class HomeScreen extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   ),
                   onChanged: (value) {
-                    // Implement search functionality
-                    // You can add this to your controller later
+                    // Implement search functionality later
                   },
                 ),
               ),
 
-              // Station Count
+              // Station Count & Sort Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '${stationController.stations.length} stations found',
@@ -272,6 +281,50 @@ class HomeScreen extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade700,
                       ),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.sort),
+                      onSelected: (value) {
+                        if (value == 'distance') {
+                          stationController.sortByDistance();
+                        } else if (value == 'availability') {
+                          stationController.sortByAvailability();
+                        } else if (value == 'name') {
+                          stationController.sortByName();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'distance',
+                          child: Row(
+                            children: [
+                              Icon(Icons.near_me, size: 20),
+                              SizedBox(width: 8),
+                              Text('Sort by Distance'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'availability',
+                          child: Row(
+                            children: [
+                              Icon(Icons.electric_bolt, size: 20),
+                              SizedBox(width: 8),
+                              Text('Sort by Availability'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'name',
+                          child: Row(
+                            children: [
+                              Icon(Icons.sort_by_alpha, size: 20),
+                              SizedBox(width: 8),
+                              Text('Sort by Name'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -284,6 +337,8 @@ class HomeScreen extends StatelessWidget {
                   itemCount: stationController.stations.length,
                   itemBuilder: (context, index) {
                     final station = stationController.stations[index];
+                    final distance = stationController.getDistanceToStation(station);
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       elevation: 2,
@@ -350,6 +405,25 @@ class HomeScreen extends StatelessWidget {
                                 ],
                               ),
 
+                              // Distance (if available)
+                              if (distance != null) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.near_me, size: 14, color: Colors.blue.shade600),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${distance.toStringAsFixed(1)} km away',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.blue.shade600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+
                               const SizedBox(height: 12),
 
                               // Amenities
@@ -399,10 +473,18 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       }),
+      floatingActionButton: Obx(() {
+        return stationController.isLoadingLocation.value
+            ? const CircularProgressIndicator()
+            : FloatingActionButton(
+          onPressed: () => stationController.getCurrentLocation(),
+          backgroundColor: Colors.green,
+          child: const Icon(Icons.my_location, color: Colors.white),
+        );
+      }),
     );
   }
 
-  // Amenity icon helper
   IconData _getAmenityIcon(String amenity) {
     switch (amenity.toLowerCase()) {
       case 'wifi':
@@ -418,7 +500,6 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  // Format amenity string helper
   String _formatAmenity(String amenity) {
     return amenity
         .split('_')
